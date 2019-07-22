@@ -2,38 +2,26 @@
 Developer: Amit Jha
 Date: July 21st, 2019
 Purpose: To automatically download and process the videos for a paper
+
+DEPENDENCIES:
+    1. pandas
+    2. moviepy
+    3. wget
+    4. os
 """
 
 import os
 import wget
 import pandas as pd
+import numpy as np
 from moviepy.video.io.ffmpeg_tools import ffmpeg_extract_subclip #for cropping the video sequence
 url = 'http://csr.bu.edu/ftp/asl/asllvd/asl-data2/quicktime/{}/scene{}-camera1.mov'#url to download the unprocessed videos
-unprocessedLoc = "/home/amit/Documents/paper/asl/dataset/unprocessed/{}/{}.mp4" #where the unprocessed videos are saved
-processedLoc = "/home/amit/Documents/paper/asl/dataset/processed/{}/{}.mp4" #where the videos are saved after processing
+unprocDir = "/home/amit/Documents/paper/asl/dataset/unprocessed/" #ADJUST THIS DIR ONLY
+procDir = "/home/amit/Documents/paper/asl/dataset/processed/" #ADJUST THIS DIR ONLY
+unprocessedLoc = unprocDir +"{}/{}.mp4" #where the unprocessed videos are saved
+processedLoc = procDir + "{}/{}.mp4" #where the videos are saved after processing
 numofVideos = 161 #calculated using other script. May change if words list is altered.
-words = [   #words that the model will be able to understand. There are over 500 words. we chose only these for simplicity
-    'EXAGGERATE',
-    'CONTINUE',
-    'CARE',
-    'GUITAR',
-    'CABBAGE',
-    'FINALLY',
-    'PING-PONG/TENNIS',
-    'TEMPERATURE',
-    'WHISTLE',
-    'GRAB',
-    'STORY',
-    'STAND-UP',
-    'SLEEP',
-    'SHAME',
-    'SECRET',
-    'SAME',
-    'RUN',
-    'FLOWER',
-    'ENGAGEMENT',
-    'RESPONSIBILITY'
-]
+words = []   #words that the model will be able to understand. There are over 500 words. we chose only these for simplicity
 
 file =pd.ExcelFile('./dataDetail.xlsx') #excel file that contains the frame data and links for the videos
 frame = file.parse('Sheet1')
@@ -57,14 +45,15 @@ final["Num. of videos"] = final["Num. of videos"] - 1
 dt = dt.reset_index()
 
 videoNum = 1
+words = np.ndarray.tolist(final[final["Num. of videos"] >= 4]["Word"].values) #which ever word has 4 or more videos
 
 #download and processing
 for i in words:
     pos = int(final[final["Word"] == i]["Position"].values) #extract the position of the video in the dataframe
     count = int(final[final["Word"] == i]["Num. of videos"].values) #number of videos for i world
     try:
-        os.makedirs("/home/amit/Documents/paper/asl/dataset/unprocessed/" + i.lower()) #create the required dir
-        os.makedirs("/home/amit/Documents/paper/asl/dataset/processed/" + i.lower())
+        os.makedirs(unprocDir + i.lower()) #create the required dir
+        os.makedirs(procDir + i.lower())
     except OSError:
         print ("Failed to create directory: {}".format(i.lower()))
         exit()
@@ -75,7 +64,7 @@ for i in words:
         end = dt.iat[pos + 1 + j, 4] #ending frame where the word ends
         session = dt.at[pos + 1 + j, "Session"] #session id for the url
         scene = dt.at[pos + 1 + j, "Scene"] #scene id for the url
-        print("Downloading: Video " + str(videoNum) + "abount" + i)
+        print("Downloading: Video " + str(videoNum) + " | Word: " + i)
         wget.download(url.format(session, scene), unprocessedLoc.format(i.lower(), j+1)) #download the video
         wget.bar_adaptive(videoNum, numofVideos)
         print("Download complete...")
@@ -83,6 +72,6 @@ for i in words:
         videoNum += 1
         ffmpeg_extract_subclip(unprocessedLoc.format(i.lower(), j+1), (start/60),
                                (end/60), targetname=processedLoc.format(i.lower(), j+1)) #convert the video
-        
-        
+
+os.rmdir("/home/amit/Documents/paper/asl/dataset/unprocessed")
 print("Download sequence complete!")
