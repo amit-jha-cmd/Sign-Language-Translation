@@ -10,9 +10,9 @@ If you wish to read the original file please refer to this link.
 
 Out of all the columns provided we explain only the ones we need.
     
-    Index | Main New Gloss | Scene | Session | Start | End | Separate
-    ------|---------------|---------|-------|-----|---------|--------
-      1    |TWENTY | 2 |ASL_2008_01_11| 2635 | 2661 | [LINK]
+Index | Main New Gloss | Scene | Session | Start | End | Separate
+------|---------------|---------|-------|-----|---------|--------
+1    |TWENTY | 2 |ASL_2008_01_11| 2635 | 2661 | [LINK]
 
 <b>Start</b> : Frame from which the sign begins <br>
 <b>End </b>: Frame at which the sign ends <br>
@@ -30,12 +30,12 @@ The dataset have been prepared using 3 cameras recording from different angles. 
 
     
 ### "final" Dataframe 
-    index | Position |  Word |  Num. of Videos
-    ------|----------|-------|----------------
-       0  |     1    |TWENTY |      4
-       1  |     6    |ALONE  |      8
-       2  |     15   |LONLY  |      4
-       3  |     20   |BACHELOR|     7
+index | Position |  Word |  Num. of Videos
+------|----------|-------|----------------
+0  |     1    |TWENTY |      4
+1  |     6    |ALONE  |      8
+2  |     15   |LONLY  |      4
+3  |     20   |BACHELOR|     7
 
 This dataframe is used to download the files in a structured manner.Only first 4/9000+ entries are shown.
 ```
