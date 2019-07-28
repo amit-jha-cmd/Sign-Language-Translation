@@ -47,7 +47,7 @@ unprocDir = sys.argv[2] #ADJUST THIS DIR ONLY
 procDir = sys.argv[3] #ADJUST THIS DIR ONLY
 batch = sys.argv[1]
 unprocessedLoc = unprocDir +"/{}/{}.mp4" #where the unprocessed videos are saved
-processedLoc = procDir+ "/{}/{}/" #where the videos are saved after processing
+processedLoc = procDir+ "/{}/" #where the videos are saved after processing
 words = []   #words that the model will be able to understand. There are over 500 words. we chose only these for simplicity
 
 file =pd.ExcelFile('./dataDetail.xlsx') #excel file that contains the frame data and links for the videos
@@ -109,7 +109,7 @@ except Exception as e:
      sys.exit(-1)
     
 
-def FrameCapture(src, dest): 
+def FrameCapture(src, dest, j): 
       
     # Path to video file 
     vidObj = cv2.VideoCapture(src) 
@@ -118,14 +118,15 @@ def FrameCapture(src, dest):
     count = 1
     # checks whether frames were extracted 
     success = 1
-  
+    ran = 0
     while success: 
-  
         
+        temp = np.zeros((114, 1))
         # vidObj object calls read 
         # function extract frames 
         success, image = vidObj.read() 
         if(success):
+            ran = 1
             datum = op.Datum()
             imageToProcess = image
             datum.cvInputData = imageToProcess
@@ -142,27 +143,36 @@ def FrameCapture(src, dest):
             body = pd.DataFrame(y, columns=["Bx", "By", "Bconfidence"])
             right = pd.DataFrame(rightVal[0], columns=["Rx", "Ry", "Rconfidence"])
             left = pd.DataFrame(leftVal[0], columns=["Lx", "Ly", "Lconfidence"])
-            keypoints = pd.concat([body, right, left], axis=1, sort=True)
-            keypoints.to_csv(dest + "/{}.csv".format(count))
+            keypoints = pd.concat([body, right, left], axis=1, sort=False)
+            body = keypoints.loc[:14, ["Bx", "By"]]
+            rhand = keypoints.loc[:, ["Rx", "Ry"]]
+            lhand = keypoints.loc[:, ["Lx", "Ly"]]
+            final = np.concatenate((body.values.flat[:]
+                                    , lhand.values.flat[:]
+                                    , rhand.values.flat[:])
+                                    , axis=0)
+#            print(final)
+            final = final.reshape((114, 1))
+            temp = np.concatenate([temp, final], axis=1)
+            print(temp)
             count += 1
-
+    if(ran):
+        pd.DataFrame(temp).to_csv(dest + "/{}.csv".format(j))
+wordList = ["TWENTY"]
 for i in wordList:
     pos = int(final[final["Word"] == i]["Position"].values[0]) #extract the position of the video in the dataframe
     count = int(final[final["Word"] == i]["Num. of videos"].values[0]) #number of videos for i world
     try:
         os.makedirs(procDir + "/" +i.lower(), exist_ok=True)
     except OSError:
-        print ("Failed to create directory: {}".format(i.lower()))
+        print ("Failed to create directory: {}".format(str(i).lower()))
         exit()
+    else:
+        print ("Successfully created the directory: ".format(str(i).lower()))
     for j in range(count):
-        
-        try:
-            os.makedirs(procDir + "/" +i.lower() + "/" + str(j+1), exist_ok=True)
-        except OSError:
-            print ("Failed to create directory: {}".format(i.lower()))
-            exit()
-        else:
-            print ("Extracting Keypoints of Video {}/{} Detail: {}:{}/{}".format(videoNum, totalV, i.lower(), j + 1, count))
-        FrameCapture(unprocessedLoc.format(i.lower(), j+1), processedLoc.format(i.lower(), j+1))
-    videoNum += 1
-#print("Download sequence complete!")
+        FrameCapture(unprocessedLoc.format(i.lower(), j+1), processedLoc.format(str(i).lower()), j+1)
+        videoNum += 1
+
+
+    #print ("Extracting Keypoints of Video {}/{} Detail: {}:{}/{}".format(videoNum, totalV, i.lower(), j + 1, count))
+#unprocessedLoc.format(i.lower(), j+1), processedLoc.format(i.lower(), j+1)

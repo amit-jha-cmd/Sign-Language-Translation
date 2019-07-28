@@ -29,7 +29,6 @@ if(len(sys.argv) < 4):
 url = 'http://csr.bu.edu/ftp/asl/asllvd/asl-data2/quicktime/{}/scene{}-camera1.mov'#url to download the unprocessed videos
 unprocDir = sys.argv[2] #ADJUST THIS DIR ONLY
 procDir = sys.argv[3] #ADJUST THIS DIR ONLY
-batch = sys.argv[1]
 unprocessedLoc = unprocDir +"{}.mp4" #where the unprocessed videos are saved
 processedLoc = procDir + "{}/{}.mp4" #where the videos are saved after processing
 words = []   #words that the model will be able to understand. There are over 500 words. we chose only these for simplicity
@@ -56,40 +55,16 @@ final["Num. of videos"] = final["Num. of videos"] - 1
 dt = dt.reset_index()
 
 videoNum = 1
-words = np.ndarray.tolist(final[final["Num. of videos"] >= 4]["Word"].values) #which ever word has 4 or more videos
+greaterThan = sys.argv[1]
+words = np.ndarray.tolist(final[final["Num. of videos"] >= int(greaterThan)]["Word"].values) #which ever word has 4 or more videos
 wordList = words
-totalV = 200
-#download and processing
-if(batch == "1"):
-    wordList = words[:200]
-    print("DOWNLOADING BATCH 1")
-elif(batch == "2"):
-    wordList = words[200:400]
-    print("DOWNLOADING BATCH 2")
-elif(batch == "3"):
-    wordList = words[400:600]
-    print("DOWNLOADING BATCH 3")
-elif(batch == "4"):
-    wordList = words[600:800]
-    print("DOWNLOADING BATCH 4")
-elif(batch == "5"):
-    wordList = words[800:1000]
-    print("DOWNLOADING BATCH 5")
-elif(batch == "6"):
-    wordList = words[1000:]
-    print("DOWNLOADING BATCH 6")
-elif(batch == '0'):
-    totalV = int(final[final["Num. of videos"] >= 4]["Num. of videos"].sum())
-    wordList = words
-else:
-    print("Specify batch number")
-    exit(1)
     
 clear = lambda: os.system('clear')
     
 
 
 for i in wordList:
+    i = str(i)
     pos = int(final[final["Word"] == i]["Position"].values[0]) #extract the position of the video in the dataframe
     count = int(final[final["Word"] == i]["Num. of videos"].values[0]) #number of videos for i world
     try:
