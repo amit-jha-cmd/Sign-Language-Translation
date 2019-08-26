@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+    <html>
+    <head>
+        <meta http-equiv="Content-type" content="text/html;charset=UTF-8">
+        <title>Real-time Sign-language translation(ASL to English)</title>
+        
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/markdown.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/Microsoft/vscode/extensions/markdown-language-features/media/highlight.css">
+        
+        <style>
+.task-list-item { list-style-type: none; } .task-list-item-checkbox { margin-left: -20px; vertical-align: middle; }
+</style>
+        <style>
+            body {
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe WPC', 'Segoe UI', 'Ubuntu', 'Droid Sans', sans-serif;
+                font-size: 14px;
+                line-height: 1.6;
+            }
+        </style>
+        
+        
+    </head>
+    <body>
+        <h1 id="real-time-sign-language-translationasl-to-english">Real-time Sign-language translation(ASL to English)</h1>
+<blockquote>
+<p>:warning: Please make sure OpenPose is properly configured in your environment with it's python API enabled :warning:</p>
+</blockquote>
+<blockquote>
+<p>The dataset for this paper was collected from this link[&quot;#&quot;]</p>
+</blockquote>
+<ul>
+<li><a href="#real-time-sign-language-translationasl-to-english">Real-time Sign-language translation(ASL to English)</a>
+<ul>
+<li><a href="#steps-involved">Steps Involved</a></li>
+<li><a href="#documentation">Documentation</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="steps-involved">Steps Involved</h2>
+<ol>
+<li>
+<p>The dataset is available both as pre-processed file and raw files. For our implementation a preprocessed dataset will not work as OpenPose would not be able to detect keypoints. So, we download the raw(unprocessed) files using an automation script that automatically downloads and extracts the different signs in the videos in the right sequence and stores it in a directory</p>
+<pre><code><div>-&gt; : Folder
+-- : files
+
+Video Dataset
+    |-&gt;Hello
+    |   |-- 1.mp4
+    |   |-- 2.mp4
+    |   |-- 3.mp4
+    |   |-- 4.mp4
+    |
+    |-&gt;Bye
+    |   |-- 1.mp4
+    |   |-- 2.mp4
+    |   |-- 3.mp4
+    |   |-- 4.mp4
+    |   |-- 5.mp4
+    |
+    .
+    .
+    .
+</div></code></pre>
+</li>
+<li>
+<p>We extract keypoints from  the videos using the pre-trained openpose model for each frame in the video and save it in a folder as csv files in a manner similar to how we save the video sequences after extraction. We only need the keypoints for upper body and hands to detect signs hence other keypoints are removed from the file before saving.</p>
+<table>
+<thead>
+<tr>
+<th>Bx</th>
+<th>By</th>
+<th>Bconfidence</th>
+<th>Rx</th>
+<th>Ry</th>
+<th>Rconfidence</th>
+<th>Lx</th>
+<th>Ly</th>
+<th>Lconfidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>329</td>
+<td>133</td>
+<td>0.89</td>
+<td>296</td>
+<td>232</td>
+<td>0.78</td>
+<td>364</td>
+<td>385</td>
+<td>0.65</td>
+</tr>
+<tr>
+<td>245</td>
+<td>157</td>
+<td>0.39</td>
+<td>522</td>
+<td>311</td>
+<td>0.89</td>
+<td>231</td>
+<td>512</td>
+<td>0.53</td>
+</tr>
+</tbody>
+</table>
+<pre><code><div>COLUMNS:
+Bx: Body x co-ordinate
+By: Body y co-ordinate
+Bconfidence: confidence score of the keypoint
+
+Rx: Right x co-ordinate
+Ry: Right y co-ordinate
+Rconfidence: confidence score of the keypoint
+
+Lx: Left x co-ordinate
+Ly: Left y co-ordinate
+Lconfidence: confidence score of the keypoint
+
+ROWS: 
+row i of csv file = arr[i]
+
+
+arr = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 15, 16, 17, 18]
+
+arr represents the body keypoints being saved. Please refer to openpose/docs/output.md for details
+</div></code></pre>
+<p>Structure of the csv files</p>
+<pre><code><div>-&gt; : Folder
+-- : files
+
+CSV Dataset
+    |-&gt;Hello
+    |   |--1.csv
+    |   |--2.csv
+    |   |--3.csv
+    |   |--4.csv
+    |
+    |-&gt;Wake-Up
+    |   |--1.csv
+    |   |--2.csv
+    |   |--3.csv
+    .
+    .
+    .
+</div></code></pre>
+</li>
+<li>
+<p>A total of 1200 ASL words are used out of 2700 words in the dataset. Total number of video sequences used are 6700.</p>
+</li>
+<li>
+<p>We propose using a Many-to-One RNN(Recurrent Neural Network)</p>
+</li>
+</ol>
+<h2 id="documentation">Documentation</h2>
+<ul>
+<li>Download and extract videos</li>
+<li>Extract keypoints</li>
+<li>Feature augmentation</li>
+<li>Normalization technique</li>
+<li>Colab implementation</li>
+</ul>
+
+    </body>
+    </html>

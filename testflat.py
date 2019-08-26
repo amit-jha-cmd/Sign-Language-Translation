@@ -15,6 +15,7 @@ import pandas as pd
 import numpy as np
 import sys
 import cv2
+import random
 from sys import platform
 import argparse
 
@@ -46,7 +47,7 @@ params["hand_detector"] = 0
 unprocDir = sys.argv[2] #ADJUST THIS DIR ONLY
 procDir = sys.argv[3] #ADJUST THIS DIR ONLY
 morethan = sys.argv[1]
-unprocessedLoc = unprocDir +"/{}/{}.mp4" #where the unprocessed videos are saved
+unprocessedLoc = unprocDir +"/{}/{}.csv" #where the unprocessed videos are saved
 processedLoc = procDir+ "/{}/" #where the videos are saved after processing
 words = []   #words that the model will be able to understand. There are over 500 words. we chose only these for simplicity
 
@@ -74,8 +75,8 @@ dt = dt.reset_index()
 videoNum = 1
 words = np.ndarray.tolist(final[final["Num. of videos"] >= int(morethan)]["Word"].values) #which ever word has 4 or more videos
 wordList = words
-  
-
+lst = []
+temp = None
 try:
     # Starting OpenPose
     opWrapper = op.WrapperPython()
@@ -87,57 +88,12 @@ except Exception as e:
      sys.exit(-1)
     
 
-def FrameCapture(src, dest, j): 
-      
-    # Path to video file 
-    vidObj = cv2.VideoCapture(src) 
-  
-    
-    count = 1
-    # checks whether frames were extracted 
-    success = 1
-    ran = 0
-    temp = None
-    while success: 
-        # vidObj object calls read 
-        # function extract frames 
-        success, image = vidObj.read() 
-        if(success):
-            ran = 1
-            datum = op.Datum()
-            imageToProcess = image
-            datum.cvInputData = imageToProcess
-            opWrapper.emplaceAndPop([datum])
-        # Saves the frames with frame-count 
-#        cv2.imwrite(dest + "temp%d.jpg" % count, image) 
-            poseVal = datum.poseKeypoints
-            
-            x = poseVal[0]
-            impKeypnts = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 12, 15, 16, 17, 18]
-            y = x[impKeypnts]
-            rightVal = datum.handKeypoints[1]
-            leftVal = datum.handKeypoints[0]
-            body = pd.DataFrame(y, columns=["Bx", "By", "Bconfidence"])
-            right = pd.DataFrame(rightVal[0], columns=["Rx", "Ry", "Rconfidence"])
-            left = pd.DataFrame(leftVal[0], columns=["Lx", "Ly", "Lconfidence"])
-            keypoints = pd.concat([body, right, left], axis=1, sort=False)
-            body = keypoints.loc[:14, ["Bx", "By"]]
-            rhand = keypoints.loc[:, ["Rx", "Ry"]]
-            lhand = keypoints.loc[:, ["Lx", "Ly"]]
-            final = np.concatenate((body.values.flat[:]
-                                    , lhand.values.flat[:]
-                                    , rhand.values.flat[:])
-                                    , axis=0)
-#            print(final)
-            final = final.reshape((114, 1))
-            if(temp is None):
-                temp = final
-            else:
-                temp = np.concatenate([temp, final], axis=1)
-            count += 1
-    if(ran):
-        pd.DataFrame(temp).to_csv(dest + "/{}.csv".format(j))
-
+def FrameCapture(src, dest, j, i): 
+    file = pd.read_csv(src)  
+    file = file.drop("Unnamed: 0", axis=1)
+    arr = np.transpose(file.iloc[:, sorted(random.sample(range(len(file.columns)), 15))].values.flat[:]).reshape((1, 1710))
+    np.concatenate((temp, arr), axis=0)
+    lst.append(i)
 for i in wordList:
     pos = int(final[final["Word"] == i]["Position"].values[0]) #extract the position of the video in the dataframe
     count = int(final[final["Word"] == i]["Num. of videos"].values[0]) #number of videos for i world
@@ -148,12 +104,27 @@ for i in wordList:
         exit()
     else:
         print ("Successfully created the directory: ".format(str(i).lower()))
-    for j in range(count):
-        print("Converting for WORD: {} | {}/{}".format(i, j+1, count))
-        FrameCapture(unprocessedLoc.format(i.lower(), j+1), processedLoc.format(str(i).lower()), j+1)
-        videoNum += 1
-        print("Conversion complete for video number {}".format(videoNum))
+    print("Converting for WORD: {} | {}/{}".format(i, count, count))
+    try:
+        file = pd.read_csv(unprocessedLoc.format(i.lower(), count-1))  
+        file = file.drop("Unnamed: 0", axis=1)
+#        print(file)
+        if(len(file.columns) < 15):
+            continue
+        else:
+            arr = file.iloc[:, sorted(random.sample(range(len(file.columns)), 15))].values.flat[:].reshape(1, 1710)
+            if(temp is None):
+                temp = arr
+            else:
+                temp = np.concatenate((temp, arr), axis=0)
+                lst.append(i)
+    except:
+        continue
+    videoNum += 1
+    print("Conversion complete for video number {}".format(videoNum))
+pd.DataFrame(temp).to_csv("./file.csv")
+temp = None
 
-
+pd.DataFrame(lst).to_csv("y.csv")
     #print ("Extracting Keypoints of Video {}/{} Detail: {}:{}/{}".format(videoNum, totalV, i.lower(), j + 1, count))
 #unprocessedLoc.format(i.lower(), j+1), processedLoc.format(i.lower(), j+1)

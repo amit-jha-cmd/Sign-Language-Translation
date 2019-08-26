@@ -1,40 +1,48 @@
-# Real-time Sign-language translation(ASL to English)
+# Sign-language recognition
 
 > :warning: Please make sure OpenPose is properly configured in your environment with it's python API enabled :warning:
 
-The dataset for this paper was collected from this link["#"]
+> The dataset for this paper was collected from this link["#"]
+- [Sign-language recognition](#sign-language-recognition)
+  - [Introduction](#introduction)
+  - [Steps Involved](#steps-involved)
+  - [Documentation](#documentation)
+
+## Introduction
 
 ## Steps Involved
-1. The dataset is available both as pre-processed file and raw files. For our implementation a preprocessed dataset will not work as OpenPose would not be able to detect keypoints. So, we download the raw(unprocessed) files using an automation script that automatically downloads and extracts the different signs in the videos in the right sequence and stores it in a directory
+1. The dataset used in this project has over 140K video sequences broken down into 22 batches. Each batch contains around 6k folders each containing all the frames for the given class. Each folder in nameed according to the jester-v1-train(.csv) file. Due to the shear volume of the dataset the videos sequences are downloaded in the cloud and all the processing takes place in google colab. Each batch in the dataset in orderes in the falling sequence.
     ```
     -> : Folder
     -- : files
 
     Video Dataset
-        |->Hello
-        |   |-- 1.mp4
-        |   |-- 2.mp4
-        |   |-- 3.mp4
-        |   |-- 4.mp4
+        |->3122
+        |   |-- 1.jpg
+        |   |-- 2.jpg
+        |   |-- 3.jpg
+        |   |-- 4.jpg
         |
-        |->Bye
-        |   |-- 1.mp4
-        |   |-- 2.mp4
-        |   |-- 3.mp4
-        |   |-- 4.mp4
-        |   |-- 5.mp4
+        |->1212
+        |   |-- 1.jpg
+        |   |-- 2.jpg
+        |   |-- 3.jpg
+        |   |-- 4.jpg
+        |   |-- 5.jpg
         |
         .
         .
         .
+    
     ```
+    >Each jpg file represents a frame in the respective video.
 
 2. We extract keypoints from  the videos using the pre-trained openpose model for each frame in the video and save it in a folder as csv files in a manner similar to how we save the video sequences after extraction. We only need the keypoints for upper body and hands to detect signs hence other keypoints are removed from the file before saving.
 
-    Bx |  By | Bconfidence |  Rx  |  Ry  | Rconfidence |  Lx  |  Ly  | Lconfidence
-    ---- | ---- | ------------- | ------ | ------ | ------------- | ------ | ------ | ------------- |
-    329 | 133 | 0.89 | 296 | 232 | 0.78 | 364 | 385 | 0.65
-    245 | 157 | 0.39 | 522 | 311 | 0.89 | 231 | 512 | 0.53
+    | Bx  | By  | Bconfidence | Rx  | Ry  | Rconfidence | Lx  | Ly  | Lconfidence |
+    | --- | --- | ----------- | --- | --- | ----------- | --- | --- | ----------- |
+    | 329 | 133 | 0.89        | 296 | 232 | 0.78        | 364 | 385 | 0.65        |
+    | 245 | 157 | 0.39        | 522 | 311 | 0.89        | 231 | 512 | 0.53        |
 
     ```
     COLUMNS:
@@ -64,19 +72,11 @@ The dataset for this paper was collected from this link["#"]
     -- : files
 
     CSV Dataset
-        |->Hello
-        |   |->1
-        |   |   |-- 1.csv
-        |   |   |-- 2.csv
-        |   |   |-- 3.csv
-        .
-        .
-        .
-        |   |->2
-        |   |   |-- 1.csv
-        |   |   |-- 2.csv
-        |   |   |-- 3.csv
-        |   |   |-- 4.csv
+        |->3122
+        |   |-- video.csv
+        |
+        |->1212
+        |   |-- video.csv
         .
         .
         .
@@ -86,6 +86,9 @@ The dataset for this paper was collected from this link["#"]
 
 4. We propose using a Many-to-One RNN(Recurrent Neural Network)
 
-## Table of Content
-1. Video extraction
-2. Keypoint extraction
+## Documentation
+- Download and extract videos
+- Extract keypoints
+- Feature augmentation
+- Normalization technique
+- Colab implementation
